@@ -75,7 +75,7 @@ function [v] = buildvector (x,i0,i1,k)
   %% right:          |                    |
   %%        ---------+                    |
 
-  left  = cat (1, x(i0:k,1), zeros (i1 -k,1)); 
+  left  = cat (1, x(i0:k,1), zeros (i1 -k,1));
   right = cat (1, zeros (k-i0 + 1, 1), x(k+1:i1,1));
   
   n = norm (node);
