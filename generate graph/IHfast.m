@@ -61,16 +61,16 @@ function [A] = IHfast (P)
   
   %% take upper diagonal without the diagonal
   
-  topindices =  triu(true(size(A)), 1); 
+  topindices =  triu(true(size(A)), 1)
   
   %% generate independent Bernoulli entries until we have a connected graph
   %% we do not test connectivity, we simply check no isolated points.
   %% In theory this is the same with high probability.
-  
+  P(topindices)
   code = -1;
   while (code == -1)
     
-    topA = lebernoulliIH (P(topindices));
+    topA = lebernoulliIH (P(topindices))
     
     A (topindices) = topA;
     A = A';			%% transpose the matrix; 

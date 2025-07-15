@@ -199,8 +199,8 @@ def topdown(M, r1):
 
         # find index of block where split occured
         jk = int(iblock[iw])
-        print(f"jk = {jk}\n")
-        print(f"k = {where[iw]}\n")
+        # print(f"jk = {jk}\n")
+        # print(f"k = {where[iw]}\n")
         # for all the blocks before jk,the L and R indices remain the same
         if jk > 0:
             right[n+1, :jk] = right[n, :jk]
@@ -213,20 +213,18 @@ def topdown(M, r1):
         if jk < n:
             left[n+1, jk+2:n+2] = left[n, jk+1:n+1]
             right[n+1, jk+1:n+2] = right[n, jk:n+1]
-    print(f"left = {left}\n")
-    print(f"right = {right}\n\n")
+    # print(f"left = {left}\n")
+    # print(f"right = {right}\n\n")
     return Qn
 
 A = genSBM(7,2,1,1)
 # print(A)
-test_output = topdown(A[0], 1/np.sqrt(7) * np.ones(7))
-Qn = np.transpose(test_output)
-test_id1 = Qn @ test_output
-test_id2 = test_output @ Qn
-print(Qn @ test_output)
+Q_n = topdown(A[0], 1/np.sqrt(7) * np.ones(7))
+#print(Q_n)
+
 print("debug")
 
-def barycenter(AG, M):
+def barycenter(AG, M, display = False):
     """
     _Description :    The function computes the Frechet mean of a sample of
                     T graphs, each of which of size n. The distance is the l2 norm
@@ -239,9 +237,7 @@ def barycenter(AG, M):
     
         M: number of eigenvalues that are used to reconstruct the graph using the truncated Soules basis.
     
-        n: size of the graphs
-    
-        T: number of graph in the sample
+
     
     OUTPUT:
     
@@ -262,6 +258,62 @@ def barycenter(AG, M):
     
     _Revisions History: 2025 Initial keying
     """
-    T = np.shape(AG)
+    #initialize T and n
+    T = np.shape(AG)[0]
+    n = np.shape(AG)[1]
+    Exp_A = np.average(AG, axis=0)
 
-    return
+    ## TODO: Display functionality
+
+    ## TODO: One-Shot? Not quite sure how to recreate a mean sample of one graph?
+
+    # What follows is in the "Else" portion of FM Code
+    
+    #initialize arrays
+    lamb = np.zeros((T, n))     #switched, so that lamb[0] corresponds to AG[0]
+    # Kn = np.zeros((n,n))
+    # K = np.zeros((n,n))       #Redundant ???
+
+    # compute eigenvalues of each normalized adj matrix
+    for t in range(T):
+        A = AG[t]
+        degA = np.sum(A, axis=0)
+        id_degA = np.diag(1/np.sqrt(degA))
+        A_norm = id_degA @ A @id_degA
+        #Re-Symmetrize matrix (to account for machine error??)
+        # TODO: Ask FM about this step
+        A_norm = 0.5*(A_norm + np.transpose(A_norm))
+        lamb[t], _ = np.linalg.eigh(A_norm)
+
+    lap_mean_spec = 1 - np.average(lamb, axis = 0)
+    #re-sort into ascending order
+    eigL = np.sort(lap_mean_spec)
+    eigL2 = eigL[:M]
+    # Compute best Soules Basis
+    r1 = 1/np.sqrt(n)*np.ones(n)
+    Qn = topdown(Exp_A, r1)
+    #Take only the first M Soules vectors, and compute EM (see paper)
+    Q = Qn[:M, :]
+    EM = np.transpose(Q) @ Q
+    # Estimate the block geometry
+    Epd = np.where(EM>1E-6, 1, 0)
+    Epd = Epd - np.diag(np.diag(Epd))
+
+    #Compute an estimate of the degree over each block
+    d1 = np.sum(Exp_A, axis = 0)
+    block_size = np.sum(Epd, axis = 0)
+    d_avg = (Epd@d1)*(1/block_size)
+    D2_avg = np.diag(np.sqrt((d_avg)))
+    # reconstruct the truncated barycenter
+    L2 = np.transpose(Q) @ np.diag((eigL2)) @ Q
+    bary_trunc = D2_avg @ (EM - L2) @ D2_avg
+    #resymmetrize 
+    bary_trunc = 0.5 * (bary_trunc + np.transpose(bary_trunc))
+    bary_trunc = bary_trunc - np.diag(np.diag(bary_trunc))
+    print("debug")
+    return Qn, bary_trunc, Epd, Exp_A
+
+
+AG_sample = np.array([np.ones((3,3)) - np.diag(np.ones(3)), 2*np.ones((3,3)) - np.diag(2*np.ones(3)), 4*np.ones((3,3)) - np.diag(4*np.ones(3)), 8*np.ones((3,3))- 8*np.diag(np.ones(3))])
+
+barycenter(AG_sample, 2)

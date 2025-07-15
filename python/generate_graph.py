@@ -118,25 +118,77 @@ def genSBM(n, M, equal_size = True, equal_chance = True):
 
     return P, p, size_of_block
 
+def lebernoulliTH(P):
+    """
+    _Module_Name : lebernoulliH
+    
+    _Description : generates an n x m matrix with Bernoulli entries 
+    
+    
+    _References : 
+    
+    _Remarks : This is faster than the MATLAB version.
+    
+    _Author :                 Francois G. Meyer
+    
+    _Revisions History: 2025 Initial keying
+    """
+    [n,m] = np.shape(P)
+    A = np.where(np.random.rand(n,m) < P, 1, 0)
+    return A
+def IHfast(P):
+    """
+    _Module_Name : IHfast
+    
+    _Description : construct an inhomogeneous random graph based on independent
+     Bernoulli symmetric matrix with chances p_ij  
+    
+    
+    _References :
+    
+    _Remarks : This is fast.
+    
+    _Author :                 Francois G. Meyer
+    
+    _Revisions History: 2025 Initial keying
+    """
+    n_nodes = np.shape(P)[0]
+    A = np.zeros((n_nodes, n_nodes))
+    top_indices = np.where(np.triu(np.ones((n_nodes, n_nodes)), k=1)==1, 1, 0)
+    #  generate independent Bernoulli entries until we have a connected graph
+    #  we do not test connectivity, we simply check no isolated points.
+    #  In theory this is the same with high probability.
+    code = -1
+    while code == -1:
+        topA = lebernoulliTH(P[top_indices])
+        code = 1
+
+    return
+
+P = 0.5* np.ones((6,6))
+IHfast(P)
+# A = lebernoulliTH(P)
+# print(P)
+# print(A)
 
 
-test = False
-if test:
+# test = False
+# if test:
 
-    p1 = genSBM(25, 5, 1, 0)[0]
-    p2 = genSBM(25, 6, 1, 1)[0]
-    p3 = genSBM(25, 4, 0, 1)[0]
-    p4 = genSBM(25, 4, 0, 0)[0]
+#     p1 = genSBM(25, 5, 1, 0)[0]
+#     p2 = genSBM(25, 6, 1, 1)[0]
+#     p3 = genSBM(25, 4, 0, 1)[0]
+#     p4 = genSBM(25, 4, 0, 0)[0]
 
-    plt.imshow(p1)
-    plt.colorbar()
-    plt.show()
-    plt.imshow(p2)
-    plt.colorbar()
-    plt.show()
-    plt.imshow(p3)
-    plt.colorbar()
-    plt.show()
-    plt.imshow(p4)
-    plt.colorbar()
-    plt.show()
+#     plt.imshow(p1)
+#     plt.colorbar()
+#     plt.show()
+#     plt.imshow(p2)
+#     plt.colorbar()
+#     plt.show()
+#     plt.imshow(p3)
+#     plt.colorbar()
+#     plt.show()
+#     plt.imshow(p4)
+#     plt.colorbar()
+#     plt.show()
